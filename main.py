@@ -1,3 +1,4 @@
+import json
 import math
 import random
 from PIL import Image, ImageDraw
@@ -51,6 +52,9 @@ STROKES = {
     ]
 }
 
+def send(msg):
+    print(json.dumps(msg), flush=True)
+
 def jitter_point(point, max_offset=1.5):
     dx = random.uniform(-max_offset, max_offset)
     dy = random.uniform(-max_offset, max_offset)
@@ -85,11 +89,15 @@ def generate_digit_image(digit, c):
 
 def generate_dataset(c):
     all_images = []
+    total = sum(c['distribution'].values())
+    completed = 0
 
     for digit, count in c['distribution'].items():
         for i in range(count):
             img = generate_digit_image(digit, c)
             all_images.append((img, digit, i))
+            completed += 1
+            send({"status": "progress", "completed": completed, "total": total})
 
     return all_images
 
@@ -133,6 +141,9 @@ def main():
     all_images = generate_dataset(config)
     train, val = split_dataset(all_images)
     save_dataset(train, val, "output")
+    send({"status": "done", "train_count": len(train), "val_count": len(val), "output_dir": "output"})
+
+
 
 
 if __name__ == "__main__":
