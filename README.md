@@ -1,0 +1,5 @@
+Forge exists because of a problem [NumberGuesser](https://github.com/Glover69/NumberGuesser) ran into: a neural network trained from scratch on MNIST handled the original test set fine, then fell apart the moment it saw actual hand-drawn digits. Clean, centered, evenly-stroked training data doesn't prepare a model for how messy real handwriting actually is.
+
+Forge is a macOS tool built to fix that. Describe the dataset you want in plain language: digit distribution, noise level, how many images; and it generates labeled digit images with realistic stroke variation (jitter, blur, grain), then splits everything into train and validation sets automatically.
+
+It's built with SwiftUI on the front end, using Foundation Models to turn your description into config, and a Python engine underneath using PIL and NumPy. The two talk over an NDJSON stdio bridge, the same setup [Rubrico](https://github.com/Glover69/Rubrico) uses.
