@@ -5,8 +5,50 @@ import numpy as np
 from PIL.ImageFilter import GaussianBlur
 
 STROKES = {
-    "1": [[(14,4), (13,14), (15,24)]],
-    "7": [[(5,5), (23,5)], [(22,6), (15,14), (10,24)]]
+    "0": [
+        [[(14,4), (20,8), (22,14), (20,20), (14,24), (8,20), (6,14), (8,8), (14,4)]]
+    ],
+    "1": [
+        [[(14,4), (13,14), (15,24)]]
+    ],
+    "2": [
+        [[(7,7), (14,4), (20,8), (18,14), (8,22), (22,24)]]
+    ],
+    "3": [
+        [[(7,7), (15,4), (20,9), (15,13), (20,18), (15,24), (7,21)]]
+    ],
+    "4": [
+        [
+            [(16,4), (6,18), (20,18)],   # diagonal down then across
+            [(16,4), (16,24)]             # vertical stem
+        ]
+    ],
+    "5": [
+        [
+            [(20,5), (7,5)],                      # top bar
+            [(7,5), (7,13), (15,13)],              # down then across
+            [(15,13), (20,18), (15,23), (7,21)]    # curve into bottom bump
+        ]
+    ],
+    "6": [
+        [[(19,5), (10,8), (7,16), (10,23), (17,23), (20,18), (16,14), (9,15)]]
+    ],
+    "7": [
+        [
+            [(5,5), (23,5)],
+            [(22,6), (15,14), (10,24)]
+        ]
+    ],
+    "8": [
+        [
+            [(14,4), (18,5), (19,8), (17,10), (14,11), (11,10), (9,8), (10,5), (14,4)],     # top loop
+            [(14,11), (19,14), (20,18), (18,22), (14,24), (10,22), (8,18), (9,14), (14,11)] # bottom loop
+        ]
+    ],
+    "9": [
+        [[(18,9), (13,5), (8,9), (13,13), (18,9), (19,14), (16,19), (12,24)]],  # variant 1: curved hook tail
+        [[(18,9), (13,5), (8,9), (13,13), (18,9), (17,16), (16,24)]]            # variant 2: straight tail
+    ]
 }
 
 def jitter_point(point, max_offset=1.5):
@@ -30,7 +72,9 @@ def generate_digit_image(digit, c):
     canvas = Image.new("RGB", (28, 28), "black")
     draw = ImageDraw.Draw(canvas)
 
-    for stroke in STROKES[digit]:
+    variant = random.choice(STROKES[digit])
+
+    for stroke in variant:
         jittered_points = [jitter_point(point=p) for p in stroke]
         thickness = random.randint(1, 2)
         draw.line(jittered_points, fill='white', width=thickness)
@@ -81,7 +125,7 @@ def save_dataset(train, val, output_dir):
 
 def main():
     config = {
-        "distribution": {"1": 20, "7": 20},
+        "distribution": { "0": 10, "1": 10, "2": 10, "3": 10, "4": 10, "5": 10, "6": 10, "7": 10, "8": 10, "9": 10 },
         "noise_intensity": 10,
         "blur_range": [0.3, 0.8]
     }
