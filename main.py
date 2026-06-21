@@ -1,6 +1,8 @@
 import json
 import math
 import random
+import sys
+
 from PIL import Image, ImageDraw
 import numpy as np
 from PIL.ImageFilter import GaussianBlur
@@ -87,7 +89,7 @@ def generate_digit_image(digit, c):
     canvas = apply_gaussian_noise(canvas, c['noise_intensity'])
     return canvas
 
-def generate_dataset(c):
+def generate_dataset(c, request_id):
     all_images = []
     total = sum(c['distribution'].values())
     completed = 0
@@ -97,7 +99,7 @@ def generate_dataset(c):
             img = generate_digit_image(digit, c)
             all_images.append((img, digit, i))
             completed += 1
-            send({"status": "progress", "completed": completed, "total": total})
+            send({"id": request_id, "status": "progress", "completed": completed, "total": total})
 
     return all_images
 
@@ -132,16 +134,30 @@ def save_dataset(train, val, output_dir):
 
 
 def main():
-    config = {
-        "distribution": { "0": 10, "1": 10, "2": 10, "3": 10, "4": 10, "5": 10, "6": 10, "7": 10, "8": 10, "9": 10 },
-        "noise_intensity": 10,
-        "blur_range": [0.3, 0.8]
-    }
+    line = sys.stdin.readline()
 
-    all_images = generate_dataset(config)
+    try:
+        request = json.loads(line)
+    except json.JSONDecodeError as e:
+        send({"ok": False, "error": str(e), "code": "BAD_JSON"})
+        return
+
+    try:
+        config = {
+            "distribution": request["distribution"],
+            "noise_intensity": request["noise_intensity"],
+            "blur_range": request["blur_range"]
+        }
+        request_id = request["id"]
+    except KeyError as e:
+        send({"ok": False, "error": f"Missing field: {e}", "code": "MISSING_FIELD"})
+        return
+
+
+    all_images = generate_dataset(config, request_id)
     train, val = split_dataset(all_images)
     save_dataset(train, val, "output")
-    send({"status": "done", "train_count": len(train), "val_count": len(val), "output_dir": "output"})
+    send({"id": request_id, "status": "done", "train_count": len(train), "val_count": len(val), "output_dir": "output"})
 
 
 
